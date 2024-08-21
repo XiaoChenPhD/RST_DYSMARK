@@ -1,0 +1,5 @@
+4.4988 	ERROR 	Plugin `psychopy-cedrus` entry point requires module `psychopy_cedrus`, but it cannot be imported.
+7.4363 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+7.4449 	WARNING 	User requested fullscreen with size [1920 1080], but screen is actually [1792, 1120]. Using actual size
+7.6099 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+7.6101 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.

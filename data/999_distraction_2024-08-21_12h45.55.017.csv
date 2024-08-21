@@ -1,0 +1,4 @@
+﻿thisRow.t,notes,welcome_screen.started,text_welcome.started,key_resp_welcome.started,welcome_screen.stopped,key_resp_welcome.keys,key_resp_welcome.rt,key_resp_welcome.duration,refresh.started,text_refresh.started,text_refresh.stopped,refresh.stopped,wait4trigger_scanner.started,wait4trigger_text.started,scanner_trigger.started,participant,session,date,expName,psychopyVersion,frameRate,expStart,
+,,0.024295872999573476,0.04035332999956154,0.04035332999956154,6.4572695280003245,a,-14764.172360524,None,,,,,,,,999,001,2024-08-21_12h45.55.017,distraction,2024.1.3,None,2024-08-21 12h46.02.106220 -0400,
+,,,,,,,,,6.45729371500056,6.4711712900007115,6.773277890999452,6.757387274999928,,,,999,001,2024-08-21_12h45.55.017,distraction,2024.1.3,None,2024-08-21 12h46.02.106220 -0400,
+,,,,,,,,,,,,,6.757421873000567,6.773277890999452,6.773277890999452,,,,,,,,

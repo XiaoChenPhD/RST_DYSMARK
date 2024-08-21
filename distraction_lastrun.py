@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2024.1.3),
-    on Thu May  9 09:48:40 2024
+    on Wed Aug 21 12:45:45 2024
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -131,7 +131,7 @@ def setupData(expInfo, dataDir=None):
     thisExp = data.ExperimentHandler(
         name=expName, version='',
         extraInfo=expInfo, runtimeInfo=None,
-        originPath='/Users/ChenXiao/Library/CloudStorage/OneDrive-Personal/Documents/TMS_EEG_project/RST_alpha/distraction_lastrun.py',
+        originPath='/Users/ChenXiao/Documents/project_codes/RST_DYSMARK/distraction_lastrun.py',
         savePickle=True, saveWideText=True,
         dataFileName=dataDir + os.sep + filename, sortColumns='time'
     )

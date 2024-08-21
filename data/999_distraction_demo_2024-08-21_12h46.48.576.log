@@ -1,0 +1,4 @@
+5.1241 	ERROR 	Plugin `psychopy-cedrus` entry point requires module `psychopy_cedrus`, but it cannot be imported.
+7.0645 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+7.2753 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+7.2756 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.

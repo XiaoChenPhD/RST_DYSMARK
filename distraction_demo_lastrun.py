@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2024.1.3),
-    on Wed May  8 11:47:51 2024
+    on Wed Aug 21 12:46:42 2024
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -131,7 +131,7 @@ def setupData(expInfo, dataDir=None):
     thisExp = data.ExperimentHandler(
         name=expName, version='',
         extraInfo=expInfo, runtimeInfo=None,
-        originPath='/Users/ChenXiao/Library/CloudStorage/OneDrive-Personal/Documents/TMS_EEG_project/RST_alpha/distraction_demo_lastrun.py',
+        originPath='/Users/ChenXiao/Documents/project_codes/RST_DYSMARK/distraction_demo_lastrun.py',
         savePickle=True, saveWideText=True,
         dataFileName=dataDir + os.sep + filename, sortColumns='time'
     )
@@ -988,7 +988,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         
         # --- Run Routine "distraction" ---
         routineForceEnded = not continueRoutine
-        while continueRoutine and routineTimer.getTime() < 3.0:
+        while continueRoutine and routineTimer.getTime() < 5.0:
             # get current time
             t = routineTimer.getTime()
             tThisFlip = win.getFutureFlipTime(clock=routineTimer)
@@ -1019,7 +1019,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             # if prompt_constant is stopping this frame...
             if prompt_constant.status == STARTED:
                 # is it time to stop? (based on global clock, using actual start)
-                if tThisFlipGlobal > prompt_constant.tStartRefresh + 3-frameTolerance:
+                if tThisFlipGlobal > prompt_constant.tStartRefresh + 5-frameTolerance:
                     # keep track of stop time/frame for later
                     prompt_constant.tStop = t  # not accounting for scr refresh
                     prompt_constant.tStopRefresh = tThisFlipGlobal  # on global time
@@ -1053,7 +1053,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             # if prompts is stopping this frame...
             if prompts.status == STARTED:
                 # is it time to stop? (based on global clock, using actual start)
-                if tThisFlipGlobal > prompts.tStartRefresh + 3-frameTolerance:
+                if tThisFlipGlobal > prompts.tStartRefresh + 5-frameTolerance:
                     # keep track of stop time/frame for later
                     prompts.tStop = t  # not accounting for scr refresh
                     prompts.tStopRefresh = tThisFlipGlobal  # on global time
@@ -1094,7 +1094,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if routineForceEnded:
             routineTimer.reset()
         else:
-            routineTimer.addTime(-3.000000)
+            routineTimer.addTime(-5.000000)
         thisExp.nextEntry()
         
         if thisSession is not None:

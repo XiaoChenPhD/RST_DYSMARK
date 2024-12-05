@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-This experiment was created using PsychoPy3 Experiment Builder (v2024.1.3),
-    on Thu May  9 09:38:44 2024
+This experiment was created using PsychoPy3 Experiment Builder (v2024.2.4),
+    on ?? 31, 2024, at 10:48
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -39,7 +39,7 @@ deviceManager = hardware.DeviceManager()
 # ensure that relative paths start from the same directory as this script
 _thisDir = os.path.dirname(os.path.abspath(__file__))
 # store info about the experiment session
-psychopyVersion = '2024.1.3'
+psychopyVersion = '2024.2.4'
 expName = 'rumination'  # from the Builder filename that created this script
 # information about this experiment
 expInfo = {
@@ -61,7 +61,6 @@ PILOTING = core.setPilotModeFromArgs()
 # start off with values from experiment settings
 _fullScr = True
 _winSize = [2560, 1440]
-_loggingLevel = logging.getLevel('warning')
 # if in pilot mode, apply overrides according to preferences
 if PILOTING:
     # force windowed mode
@@ -69,10 +68,6 @@ if PILOTING:
         _fullScr = False
         # set window size
         _winSize = prefs.piloting['forcedWindowSize']
-    # override logging level
-    _loggingLevel = logging.getLevel(
-        prefs.piloting['pilotLoggingLevel']
-    )
 
 def showExpInfoDlg(expInfo):
     """
@@ -131,7 +126,7 @@ def setupData(expInfo, dataDir=None):
     thisExp = data.ExperimentHandler(
         name=expName, version='',
         extraInfo=expInfo, runtimeInfo=None,
-        originPath='/Users/ChenXiao/Library/CloudStorage/OneDrive-Personal/Documents/TMS_EEG_project/RST_alpha/rumination_lastrun.py',
+        originPath='C:\\Codes\\RST_DYSMARK\\rumination_lastrun.py',
         savePickle=True, saveWideText=True,
         dataFileName=dataDir + os.sep + filename, sortColumns='time'
     )
@@ -155,10 +150,23 @@ def setupLogging(filename):
     psychopy.logging.LogFile
         Text stream to receive inputs from the logging system.
     """
-    # this outputs to the screen, not a file
-    logging.console.setLevel(_loggingLevel)
+    # set how much information should be printed to the console / app
+    if PILOTING:
+        logging.console.setLevel(
+            prefs.piloting['pilotConsoleLoggingLevel']
+        )
+    else:
+        logging.console.setLevel('warning')
     # save a log file for detail verbose info
-    logFile = logging.LogFile(filename+'.log', level=_loggingLevel)
+    logFile = logging.LogFile(filename+'.log')
+    if PILOTING:
+        logFile.setLevel(
+            prefs.piloting['pilotLoggingLevel']
+        )
+    else:
+        logFile.setLevel(
+            logging.getLevel('warning')
+        )
     
     return logFile
 
@@ -186,11 +194,11 @@ def setupWindow(expInfo=None, win=None):
         # if not given a window to setup, make one
         win = visual.Window(
             size=_winSize, fullscr=_fullScr, screen=0,
-            winType='pyglet', allowStencil=False,
+            winType='pyglet', allowGUI=False, allowStencil=False,
             monitor='testMonitor', color=[0,0,0], colorSpace='dkl',
             backgroundImage='', backgroundFit='none',
             blendMode='avg', useFBO=True,
-            units='height', 
+            units='height',
             checkTiming=False  # we're going to do this ourselves in a moment
         )
     else:
@@ -203,9 +211,8 @@ def setupWindow(expInfo=None, win=None):
     if expInfo is not None:
         # get/measure frame rate if not already in expInfo
         if win._monitorFrameRate is None:
-            win.getActualFrameRate(infoMsg='Attempting to measure frame rate of screen, please wait...')
+            win._monitorFrameRate = win.getActualFrameRate(infoMsg='Attempting to measure frame rate of screen, please wait...')
         expInfo['frameRate'] = win._monitorFrameRate
-    win.mouseVisible = False
     win.hideMessage()
     # show a visual indicator if we're in piloting mode
     if PILOTING and prefs.piloting['showPilotingIndicator']:
@@ -239,10 +246,12 @@ def setupDevices(expInfo, thisExp, win):
     # Setup iohub keyboard
     ioConfig['Keyboard'] = dict(use_keymap='psychopy')
     
-    ioSession = '1'
-    if 'session' in expInfo:
-        ioSession = str(expInfo['session'])
+    # Setup iohub experiment
+    ioConfig['Experiment'] = dict(filename=thisExp.dataFileName)
+    
+    # Start ioHub server
     ioServer = io.launchHubServer(window=win, **ioConfig)
+    
     # store ioServer object in the device manager
     deviceManager.ioServer = ioServer
     
@@ -304,11 +313,11 @@ def pauseExperiment(thisExp, win=None, timers=[], playbackComponents=[]):
     if thisExp.status != PAUSED:
         return
     
+    # start a timer to figure out how long we're paused for
+    pauseTimer = core.Clock()
     # pause any playback components
     for comp in playbackComponents:
         comp.pause()
-    # prevent components from auto-drawing
-    win.stashAutoDraw()
     # make sure we have a keyboard
     defaultKeyboard = deviceManager.getDevice('defaultKeyboard')
     if defaultKeyboard is None:
@@ -322,19 +331,17 @@ def pauseExperiment(thisExp, win=None, timers=[], playbackComponents=[]):
         # check for quit (typically the Esc key)
         if defaultKeyboard.getKeys(keyList=['escape']):
             endExperiment(thisExp, win=win)
-        # flip the screen
-        win.flip()
+        # sleep 1ms so other threads can execute
+        clock.time.sleep(0.001)
     # if stop was requested while paused, quit
     if thisExp.status == FINISHED:
         endExperiment(thisExp, win=win)
     # resume any playback components
     for comp in playbackComponents:
         comp.play()
-    # restore auto-drawn components
-    win.retrieveAutoDraw()
     # reset any timers
     for timer in timers:
-        timer.reset()
+        timer.addTime(-pauseTimer.getTime())
 
 
 def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
@@ -357,6 +364,8 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     """
     # mark experiment as started
     thisExp.status = STARTED
+    # make sure window is set to foreground to prevent losing focus
+    win.winHandle.activate()
     # make sure variables created by exec are available globally
     exec = environmenttools.setExecEnvironment(globals())
     # get device handles from dict of input devices
@@ -384,9 +393,9 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     
     # --- Initialize components for Routine "welcome_screen" ---
     text_welcome = visual.TextStim(win=win, name='text_welcome',
-        text='During the MRI, please think about the events you just recalled according to the phrase on the screen. Please don’t stop thinking when the MRI is on.\n\n\nPlease try your best not to move your head or body.\n\n\nPress a button to continue.\n\n',
+        text='During the MRI, please think about the events you just recalled according to the phrase on the screen. Please don’t stop thinking when the MRI is on\n\n\nPlease try your best not to move your head or body\n\n\nPress a button to continue\n\n',
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -396,16 +405,16 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     text_refresh = visual.TextStim(win=win, name='text_refresh',
         text=None,
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
     
     # --- Initialize components for Routine "wait4trigger_scanner" ---
     wait4trigger_text = visual.TextStim(win=win, name='wait4trigger_text',
-        text='Please wait for the scan to start.',
+        text='Please wait for the scan to start',
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -413,9 +422,9 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     
     # --- Initialize components for Routine "fake_stimulus" ---
     fake_stimulus_text = visual.TextStim(win=win, name='fake_stimulus_text',
-        text='Please wait for the scan to start.',
+        text='Please wait for the scan to start',
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -424,14 +433,14 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     prompt_constant = visual.TextStim(win=win, name='prompt_constant',
         text='Think:',
         font='Arial',
-        pos=[0,0], height=0.05, wrapWidth=None, ori=0.0, 
+        pos=[0,0], draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
     prompts = visual.TextStim(win=win, name='prompts',
         text='',
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=-1.0);
@@ -440,7 +449,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     text_refresh = visual.TextStim(win=win, name='text_refresh',
         text=None,
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -449,7 +458,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     rate_emotion_prompt = visual.TextStim(win=win, name='rate_emotion_prompt',
         text='Please use a number to indicate your current feeling:',
         font='Arial',
-        pos=(0, 0.2), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0.2), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -466,7 +475,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     text_refresh = visual.TextStim(win=win, name='text_refresh',
         text=None,
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -475,14 +484,14 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     main_body_questionnaire = visual.TextStim(win=win, name='main_body_questionnaire',
         text='During the MRI my thoughts:',
         font='Arial',
-        pos=(0, 0.3), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0.3), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
     item_text = visual.TextStim(win=win, name='item_text',
         text='',
         font='Arial',
-        pos=(0, 0.1), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0.1), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=-1.0);
@@ -499,16 +508,16 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     text_refresh = visual.TextStim(win=win, name='text_refresh',
         text=None,
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
     
     # --- Initialize components for Routine "goodbye" ---
     goodbye_text = visual.TextStim(win=win, name='goodbye_text',
-        text="Thank you. The current scan is over; please wait for the researcher's instructions.\n\n\n\nPress a button to continue.\n\n",
+        text="Thank you. The current scan is over; please wait for the researcher's instructions\n\n\n\nPress a button to continue\n\n",
         font='Arial',
-        pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+        pos=(0, 0), draggable=False, height=0.05, wrapWidth=None, ori=0.0, 
         color='white', colorSpace='rgb', opacity=None, 
         languageStyle='LTR',
         depth=0.0);
@@ -543,15 +552,27 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     )
     
     # --- Prepare to start Routine "welcome_screen" ---
+    # create an object to store info about Routine welcome_screen
+    welcome_screen = data.Routine(
+        name='welcome_screen',
+        components=[text_welcome, key_resp_welcome],
+    )
+    welcome_screen.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('welcome_screen.started', globalClock.getTime(format='float'))
+    # create starting attributes for key_resp_welcome
     key_resp_welcome.keys = []
     key_resp_welcome.rt = []
     _key_resp_welcome_allKeys = []
+    # store start times for welcome_screen
+    welcome_screen.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    welcome_screen.tStart = globalClock.getTime(format='float')
+    welcome_screen.status = STARTED
+    thisExp.addData('welcome_screen.started', welcome_screen.tStart)
+    welcome_screen.maxDuration = None
     # keep track of which components have finished
-    welcome_screenComponents = [text_welcome, key_resp_welcome]
-    for thisComponent in welcome_screenComponents:
+    welcome_screenComponents = welcome_screen.components
+    for thisComponent in welcome_screen.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -564,7 +585,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "welcome_screen" ---
-    routineForceEnded = not continueRoutine
+    welcome_screen.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine:
         # get current time
         t = routineTimer.getTime()
@@ -612,7 +633,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.callOnFlip(key_resp_welcome.clock.reset)  # t=0 on next screen flip
             win.callOnFlip(key_resp_welcome.clearEvents, eventType='keyboard')  # clear events on next screen flip
         if key_resp_welcome.status == STARTED and not waitOnFlip:
-            theseKeys = key_resp_welcome.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=False)
+            theseKeys = key_resp_welcome.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=True)
             _key_resp_welcome_allKeys.extend(theseKeys)
             if len(_key_resp_welcome_allKeys):
                 key_resp_welcome.keys = _key_resp_welcome_allKeys[-1].name  # just the last key pressed
@@ -627,13 +648,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            welcome_screen.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in welcome_screenComponents:
+        for thisComponent in welcome_screen.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -643,10 +674,13 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "welcome_screen" ---
-    for thisComponent in welcome_screenComponents:
+    for thisComponent in welcome_screen.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('welcome_screen.stopped', globalClock.getTime(format='float'))
+    # store stop times for welcome_screen
+    welcome_screen.tStop = globalClock.getTime(format='float')
+    welcome_screen.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('welcome_screen.stopped', welcome_screen.tStop)
     # check responses
     if key_resp_welcome.keys in ['', [], None]:  # No response was made
         key_resp_welcome.keys = None
@@ -659,12 +693,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     routineTimer.reset()
     
     # --- Prepare to start Routine "refresh" ---
+    # create an object to store info about Routine refresh
+    refresh = data.Routine(
+        name='refresh',
+        components=[text_refresh],
+    )
+    refresh.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('refresh.started', globalClock.getTime(format='float'))
+    # store start times for refresh
+    refresh.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    refresh.tStart = globalClock.getTime(format='float')
+    refresh.status = STARTED
+    thisExp.addData('refresh.started', refresh.tStart)
+    refresh.maxDuration = None
     # keep track of which components have finished
-    refreshComponents = [text_refresh]
-    for thisComponent in refreshComponents:
+    refreshComponents = refresh.components
+    for thisComponent in refresh.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -677,7 +722,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "refresh" ---
-    routineForceEnded = not continueRoutine
+    refresh.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine and routineTimer.getTime() < 0.3:
         # get current time
         t = routineTimer.getTime()
@@ -726,13 +771,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            refresh.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in refreshComponents:
+        for thisComponent in refresh.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -742,27 +797,44 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "refresh" ---
-    for thisComponent in refreshComponents:
+    for thisComponent in refresh.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('refresh.stopped', globalClock.getTime(format='float'))
+    # store stop times for refresh
+    refresh.tStop = globalClock.getTime(format='float')
+    refresh.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('refresh.stopped', refresh.tStop)
     # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-    if routineForceEnded:
+    if refresh.maxDurationReached:
+        routineTimer.addTime(-refresh.maxDuration)
+    elif refresh.forceEnded:
         routineTimer.reset()
     else:
         routineTimer.addTime(-0.300000)
     thisExp.nextEntry()
     
     # --- Prepare to start Routine "wait4trigger_scanner" ---
+    # create an object to store info about Routine wait4trigger_scanner
+    wait4trigger_scanner = data.Routine(
+        name='wait4trigger_scanner',
+        components=[wait4trigger_text, scanner_trigger],
+    )
+    wait4trigger_scanner.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('wait4trigger_scanner.started', globalClock.getTime(format='float'))
+    # create starting attributes for scanner_trigger
     scanner_trigger.keys = []
     scanner_trigger.rt = []
     _scanner_trigger_allKeys = []
+    # store start times for wait4trigger_scanner
+    wait4trigger_scanner.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    wait4trigger_scanner.tStart = globalClock.getTime(format='float')
+    wait4trigger_scanner.status = STARTED
+    thisExp.addData('wait4trigger_scanner.started', wait4trigger_scanner.tStart)
+    wait4trigger_scanner.maxDuration = None
     # keep track of which components have finished
-    wait4trigger_scannerComponents = [wait4trigger_text, scanner_trigger]
-    for thisComponent in wait4trigger_scannerComponents:
+    wait4trigger_scannerComponents = wait4trigger_scanner.components
+    for thisComponent in wait4trigger_scanner.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -775,7 +847,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "wait4trigger_scanner" ---
-    routineForceEnded = not continueRoutine
+    wait4trigger_scanner.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine:
         # get current time
         t = routineTimer.getTime()
@@ -838,13 +910,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            wait4trigger_scanner.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in wait4trigger_scannerComponents:
+        for thisComponent in wait4trigger_scanner.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -854,10 +936,13 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "wait4trigger_scanner" ---
-    for thisComponent in wait4trigger_scannerComponents:
+    for thisComponent in wait4trigger_scanner.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('wait4trigger_scanner.stopped', globalClock.getTime(format='float'))
+    # store stop times for wait4trigger_scanner
+    wait4trigger_scanner.tStop = globalClock.getTime(format='float')
+    wait4trigger_scanner.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('wait4trigger_scanner.stopped', wait4trigger_scanner.tStop)
     # check responses
     if scanner_trigger.keys in ['', [], None]:  # No response was made
         scanner_trigger.keys = None
@@ -870,12 +955,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     routineTimer.reset()
     
     # --- Prepare to start Routine "fake_stimulus" ---
+    # create an object to store info about Routine fake_stimulus
+    fake_stimulus = data.Routine(
+        name='fake_stimulus',
+        components=[fake_stimulus_text],
+    )
+    fake_stimulus.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('fake_stimulus.started', globalClock.getTime(format='float'))
+    # store start times for fake_stimulus
+    fake_stimulus.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    fake_stimulus.tStart = globalClock.getTime(format='float')
+    fake_stimulus.status = STARTED
+    thisExp.addData('fake_stimulus.started', fake_stimulus.tStart)
+    fake_stimulus.maxDuration = None
     # keep track of which components have finished
-    fake_stimulusComponents = [fake_stimulus_text]
-    for thisComponent in fake_stimulusComponents:
+    fake_stimulusComponents = fake_stimulus.components
+    for thisComponent in fake_stimulus.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -888,7 +984,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "fake_stimulus" ---
-    routineForceEnded = not continueRoutine
+    fake_stimulus.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine and routineTimer.getTime() < 12.0:
         # get current time
         t = routineTimer.getTime()
@@ -937,13 +1033,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            fake_stimulus.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in fake_stimulusComponents:
+        for thisComponent in fake_stimulus.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -953,56 +1059,75 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "fake_stimulus" ---
-    for thisComponent in fake_stimulusComponents:
+    for thisComponent in fake_stimulus.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('fake_stimulus.stopped', globalClock.getTime(format='float'))
+    # store stop times for fake_stimulus
+    fake_stimulus.tStop = globalClock.getTime(format='float')
+    fake_stimulus.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('fake_stimulus.stopped', fake_stimulus.tStop)
     # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-    if routineForceEnded:
+    if fake_stimulus.maxDurationReached:
+        routineTimer.addTime(-fake_stimulus.maxDuration)
+    elif fake_stimulus.forceEnded:
         routineTimer.reset()
     else:
         routineTimer.addTime(-12.000000)
     thisExp.nextEntry()
     
     # set up handler to look after randomisation of conditions etc
-    rumination_loop = data.TrialHandler(nReps=1.0, method='random', 
-        extraInfo=expInfo, originPath=-1,
-        trialList=data.importConditions('rumination_prompts.xlsx'),
-        seed=None, name='rumination_loop')
+    rumination_loop = data.TrialHandler2(
+        name='rumination_loop',
+        nReps=1.0, 
+        method='random', 
+        extraInfo=expInfo, 
+        originPath=-1, 
+        trialList=data.importConditions('rumination_prompts.xlsx'), 
+        seed=None, 
+    )
     thisExp.addLoop(rumination_loop)  # add the loop to the experiment
     thisRumination_loop = rumination_loop.trialList[0]  # so we can initialise stimuli with some values
     # abbreviate parameter names if possible (e.g. rgb = thisRumination_loop.rgb)
     if thisRumination_loop != None:
         for paramName in thisRumination_loop:
             globals()[paramName] = thisRumination_loop[paramName]
+    if thisSession is not None:
+        # if running in a Session with a Liaison client, send data up to now
+        thisSession.sendExperimentData()
     
     for thisRumination_loop in rumination_loop:
         currentLoop = rumination_loop
         thisExp.timestampOnFlip(win, 'thisRow.t', format=globalClock.format)
-        # pause experiment here if requested
-        if thisExp.status == PAUSED:
-            pauseExperiment(
-                thisExp=thisExp, 
-                win=win, 
-                timers=[routineTimer], 
-                playbackComponents=[]
-        )
+        if thisSession is not None:
+            # if running in a Session with a Liaison client, send data up to now
+            thisSession.sendExperimentData()
         # abbreviate parameter names if possible (e.g. rgb = thisRumination_loop.rgb)
         if thisRumination_loop != None:
             for paramName in thisRumination_loop:
                 globals()[paramName] = thisRumination_loop[paramName]
         
         # --- Prepare to start Routine "rumination" ---
+        # create an object to store info about Routine rumination
+        rumination = data.Routine(
+            name='rumination',
+            components=[prompt_constant, prompts],
+        )
+        rumination.status = NOT_STARTED
         continueRoutine = True
         # update component parameters for each repeat
-        thisExp.addData('rumination.started', globalClock.getTime(format='float'))
         prompt_constant.setPos((-0.5, 0.2))
         prompts.setText(prompt)
         # Run 'Begin Routine' code from code_prompts
         prompts.alignText = 'left'
+        # store start times for rumination
+        rumination.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+        rumination.tStart = globalClock.getTime(format='float')
+        rumination.status = STARTED
+        thisExp.addData('rumination.started', rumination.tStart)
+        rumination.maxDuration = None
         # keep track of which components have finished
-        ruminationComponents = [prompt_constant, prompts]
-        for thisComponent in ruminationComponents:
+        ruminationComponents = rumination.components
+        for thisComponent in rumination.components:
             thisComponent.tStart = None
             thisComponent.tStop = None
             thisComponent.tStartRefresh = None
@@ -1015,7 +1140,10 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         frameN = -1
         
         # --- Run Routine "rumination" ---
-        routineForceEnded = not continueRoutine
+        # if trial has changed, end Routine now
+        if isinstance(rumination_loop, data.TrialHandler2) and thisRumination_loop.thisN != rumination_loop.thisTrial.thisN:
+            continueRoutine = False
+        rumination.forceEnded = routineForceEnded = not continueRoutine
         while continueRoutine and routineTimer.getTime() < 120.0:
             # get current time
             t = routineTimer.getTime()
@@ -1098,13 +1226,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             if thisExp.status == FINISHED or endExpNow:
                 endExperiment(thisExp, win=win)
                 return
+            # pause experiment here if requested
+            if thisExp.status == PAUSED:
+                pauseExperiment(
+                    thisExp=thisExp, 
+                    win=win, 
+                    timers=[routineTimer], 
+                    playbackComponents=[]
+                )
+                # skip the frame we paused on
+                continue
             
             # check if all components have finished
             if not continueRoutine:  # a component has requested a forced-end of Routine
-                routineForceEnded = True
+                rumination.forceEnded = routineForceEnded = True
                 break
             continueRoutine = False  # will revert to True if at least one component still running
-            for thisComponent in ruminationComponents:
+            for thisComponent in rumination.components:
                 if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                     continueRoutine = True
                     break  # at least one component has not yet finished
@@ -1114,30 +1252,46 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
                 win.flip()
         
         # --- Ending Routine "rumination" ---
-        for thisComponent in ruminationComponents:
+        for thisComponent in rumination.components:
             if hasattr(thisComponent, "setAutoDraw"):
                 thisComponent.setAutoDraw(False)
-        thisExp.addData('rumination.stopped', globalClock.getTime(format='float'))
+        # store stop times for rumination
+        rumination.tStop = globalClock.getTime(format='float')
+        rumination.tStopRefresh = tThisFlipGlobal
+        thisExp.addData('rumination.stopped', rumination.tStop)
         # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-        if routineForceEnded:
+        if rumination.maxDurationReached:
+            routineTimer.addTime(-rumination.maxDuration)
+        elif rumination.forceEnded:
             routineTimer.reset()
         else:
             routineTimer.addTime(-120.000000)
         thisExp.nextEntry()
         
-        if thisSession is not None:
-            # if running in a Session with a Liaison client, send data up to now
-            thisSession.sendExperimentData()
     # completed 1.0 repeats of 'rumination_loop'
     
+    if thisSession is not None:
+        # if running in a Session with a Liaison client, send data up to now
+        thisSession.sendExperimentData()
     
     # --- Prepare to start Routine "refresh" ---
+    # create an object to store info about Routine refresh
+    refresh = data.Routine(
+        name='refresh',
+        components=[text_refresh],
+    )
+    refresh.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('refresh.started', globalClock.getTime(format='float'))
+    # store start times for refresh
+    refresh.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    refresh.tStart = globalClock.getTime(format='float')
+    refresh.status = STARTED
+    thisExp.addData('refresh.started', refresh.tStart)
+    refresh.maxDuration = None
     # keep track of which components have finished
-    refreshComponents = [text_refresh]
-    for thisComponent in refreshComponents:
+    refreshComponents = refresh.components
+    for thisComponent in refresh.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -1150,7 +1304,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "refresh" ---
-    routineForceEnded = not continueRoutine
+    refresh.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine and routineTimer.getTime() < 0.3:
         # get current time
         t = routineTimer.getTime()
@@ -1199,13 +1353,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            refresh.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in refreshComponents:
+        for thisComponent in refresh.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -1215,31 +1379,48 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "refresh" ---
-    for thisComponent in refreshComponents:
+    for thisComponent in refresh.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('refresh.stopped', globalClock.getTime(format='float'))
+    # store stop times for refresh
+    refresh.tStop = globalClock.getTime(format='float')
+    refresh.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('refresh.stopped', refresh.tStop)
     # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-    if routineForceEnded:
+    if refresh.maxDurationReached:
+        routineTimer.addTime(-refresh.maxDuration)
+    elif refresh.forceEnded:
         routineTimer.reset()
     else:
         routineTimer.addTime(-0.300000)
     thisExp.nextEntry()
     
     # --- Prepare to start Routine "emotional_level" ---
+    # create an object to store info about Routine emotional_level
+    emotional_level = data.Routine(
+        name='emotional_level',
+        components=[rate_emotion_prompt, slider_emotion, key_resp_emotion],
+    )
+    emotional_level.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('emotional_level.started', globalClock.getTime(format='float'))
     slider_emotion.reset()
     # Run 'Begin Routine' code from code_emotion
     event.clearEvents('keyboard')
     slider_emotion.markerPos = 5
+    # create starting attributes for key_resp_emotion
     key_resp_emotion.keys = []
     key_resp_emotion.rt = []
     _key_resp_emotion_allKeys = []
+    # store start times for emotional_level
+    emotional_level.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    emotional_level.tStart = globalClock.getTime(format='float')
+    emotional_level.status = STARTED
+    thisExp.addData('emotional_level.started', emotional_level.tStart)
+    emotional_level.maxDuration = None
     # keep track of which components have finished
-    emotional_levelComponents = [rate_emotion_prompt, slider_emotion, key_resp_emotion]
-    for thisComponent in emotional_levelComponents:
+    emotional_levelComponents = emotional_level.components
+    for thisComponent in emotional_level.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -1252,7 +1433,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "emotional_level" ---
-    routineForceEnded = not continueRoutine
+    emotional_level.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine:
         # get current time
         t = routineTimer.getTime()
@@ -1328,7 +1509,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.callOnFlip(key_resp_emotion.clock.reset)  # t=0 on next screen flip
             win.callOnFlip(key_resp_emotion.clearEvents, eventType='keyboard')  # clear events on next screen flip
         if key_resp_emotion.status == STARTED and not waitOnFlip:
-            theseKeys = key_resp_emotion.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=False)
+            theseKeys = key_resp_emotion.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=True)
             _key_resp_emotion_allKeys.extend(theseKeys)
             if len(_key_resp_emotion_allKeys):
                 key_resp_emotion.keys = _key_resp_emotion_allKeys[-1].name  # just the last key pressed
@@ -1343,13 +1524,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            emotional_level.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in emotional_levelComponents:
+        for thisComponent in emotional_level.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -1359,10 +1550,13 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "emotional_level" ---
-    for thisComponent in emotional_levelComponents:
+    for thisComponent in emotional_level.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('emotional_level.stopped', globalClock.getTime(format='float'))
+    # store stop times for emotional_level
+    emotional_level.tStop = globalClock.getTime(format='float')
+    emotional_level.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('emotional_level.stopped', emotional_level.tStop)
     thisExp.addData('slider_emotion.response', slider_emotion.getRating())
     thisExp.addData('slider_emotion.rt', slider_emotion.getRT())
     # Run 'End Routine' code from code_emotion
@@ -1379,12 +1573,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     routineTimer.reset()
     
     # --- Prepare to start Routine "refresh" ---
+    # create an object to store info about Routine refresh
+    refresh = data.Routine(
+        name='refresh',
+        components=[text_refresh],
+    )
+    refresh.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('refresh.started', globalClock.getTime(format='float'))
+    # store start times for refresh
+    refresh.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    refresh.tStart = globalClock.getTime(format='float')
+    refresh.status = STARTED
+    thisExp.addData('refresh.started', refresh.tStart)
+    refresh.maxDuration = None
     # keep track of which components have finished
-    refreshComponents = [text_refresh]
-    for thisComponent in refreshComponents:
+    refreshComponents = refresh.components
+    for thisComponent in refresh.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -1397,7 +1602,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "refresh" ---
-    routineForceEnded = not continueRoutine
+    refresh.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine and routineTimer.getTime() < 0.3:
         # get current time
         t = routineTimer.getTime()
@@ -1446,13 +1651,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            refresh.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in refreshComponents:
+        for thisComponent in refresh.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -1462,60 +1677,80 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "refresh" ---
-    for thisComponent in refreshComponents:
+    for thisComponent in refresh.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('refresh.stopped', globalClock.getTime(format='float'))
+    # store stop times for refresh
+    refresh.tStop = globalClock.getTime(format='float')
+    refresh.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('refresh.stopped', refresh.tStop)
     # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-    if routineForceEnded:
+    if refresh.maxDurationReached:
+        routineTimer.addTime(-refresh.maxDuration)
+    elif refresh.forceEnded:
         routineTimer.reset()
     else:
         routineTimer.addTime(-0.300000)
     thisExp.nextEntry()
     
     # set up handler to look after randomisation of conditions etc
-    think_content_loop = data.TrialHandler(nReps=1.0, method='sequential', 
-        extraInfo=expInfo, originPath=-1,
-        trialList=data.importConditions('think_content_condition.xlsx'),
-        seed=None, name='think_content_loop')
+    think_content_loop = data.TrialHandler2(
+        name='think_content_loop',
+        nReps=1.0, 
+        method='sequential', 
+        extraInfo=expInfo, 
+        originPath=-1, 
+        trialList=data.importConditions('think_content_condition.xlsx'), 
+        seed=None, 
+    )
     thisExp.addLoop(think_content_loop)  # add the loop to the experiment
     thisThink_content_loop = think_content_loop.trialList[0]  # so we can initialise stimuli with some values
     # abbreviate parameter names if possible (e.g. rgb = thisThink_content_loop.rgb)
     if thisThink_content_loop != None:
         for paramName in thisThink_content_loop:
             globals()[paramName] = thisThink_content_loop[paramName]
+    if thisSession is not None:
+        # if running in a Session with a Liaison client, send data up to now
+        thisSession.sendExperimentData()
     
     for thisThink_content_loop in think_content_loop:
         currentLoop = think_content_loop
         thisExp.timestampOnFlip(win, 'thisRow.t', format=globalClock.format)
-        # pause experiment here if requested
-        if thisExp.status == PAUSED:
-            pauseExperiment(
-                thisExp=thisExp, 
-                win=win, 
-                timers=[routineTimer], 
-                playbackComponents=[]
-        )
+        if thisSession is not None:
+            # if running in a Session with a Liaison client, send data up to now
+            thisSession.sendExperimentData()
         # abbreviate parameter names if possible (e.g. rgb = thisThink_content_loop.rgb)
         if thisThink_content_loop != None:
             for paramName in thisThink_content_loop:
                 globals()[paramName] = thisThink_content_loop[paramName]
         
         # --- Prepare to start Routine "think_content" ---
+        # create an object to store info about Routine think_content
+        think_content = data.Routine(
+            name='think_content',
+            components=[main_body_questionnaire, item_text, slider_thinking_content, key_resp_thinking_content],
+        )
+        think_content.status = NOT_STARTED
         continueRoutine = True
         # update component parameters for each repeat
-        thisExp.addData('think_content.started', globalClock.getTime(format='float'))
         item_text.setText(item)
         slider_thinking_content.reset()
         # Run 'Begin Routine' code from code_thinking_content
         event.clearEvents('keyboard')
         slider_thinking_content.markerPos = 5
+        # create starting attributes for key_resp_thinking_content
         key_resp_thinking_content.keys = []
         key_resp_thinking_content.rt = []
         _key_resp_thinking_content_allKeys = []
+        # store start times for think_content
+        think_content.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+        think_content.tStart = globalClock.getTime(format='float')
+        think_content.status = STARTED
+        thisExp.addData('think_content.started', think_content.tStart)
+        think_content.maxDuration = None
         # keep track of which components have finished
-        think_contentComponents = [main_body_questionnaire, item_text, slider_thinking_content, key_resp_thinking_content]
-        for thisComponent in think_contentComponents:
+        think_contentComponents = think_content.components
+        for thisComponent in think_content.components:
             thisComponent.tStart = None
             thisComponent.tStop = None
             thisComponent.tStartRefresh = None
@@ -1528,7 +1763,10 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         frameN = -1
         
         # --- Run Routine "think_content" ---
-        routineForceEnded = not continueRoutine
+        # if trial has changed, end Routine now
+        if isinstance(think_content_loop, data.TrialHandler2) and thisThink_content_loop.thisN != think_content_loop.thisTrial.thisN:
+            continueRoutine = False
+        think_content.forceEnded = routineForceEnded = not continueRoutine
         while continueRoutine:
             # get current time
             t = routineTimer.getTime()
@@ -1624,7 +1862,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
                 win.callOnFlip(key_resp_thinking_content.clock.reset)  # t=0 on next screen flip
                 win.callOnFlip(key_resp_thinking_content.clearEvents, eventType='keyboard')  # clear events on next screen flip
             if key_resp_thinking_content.status == STARTED and not waitOnFlip:
-                theseKeys = key_resp_thinking_content.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=False)
+                theseKeys = key_resp_thinking_content.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=True)
                 _key_resp_thinking_content_allKeys.extend(theseKeys)
                 if len(_key_resp_thinking_content_allKeys):
                     key_resp_thinking_content.keys = _key_resp_thinking_content_allKeys[-1].name  # just the last key pressed
@@ -1639,13 +1877,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             if thisExp.status == FINISHED or endExpNow:
                 endExperiment(thisExp, win=win)
                 return
+            # pause experiment here if requested
+            if thisExp.status == PAUSED:
+                pauseExperiment(
+                    thisExp=thisExp, 
+                    win=win, 
+                    timers=[routineTimer], 
+                    playbackComponents=[]
+                )
+                # skip the frame we paused on
+                continue
             
             # check if all components have finished
             if not continueRoutine:  # a component has requested a forced-end of Routine
-                routineForceEnded = True
+                think_content.forceEnded = routineForceEnded = True
                 break
             continueRoutine = False  # will revert to True if at least one component still running
-            for thisComponent in think_contentComponents:
+            for thisComponent in think_content.components:
                 if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                     continueRoutine = True
                     break  # at least one component has not yet finished
@@ -1655,10 +1903,13 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
                 win.flip()
         
         # --- Ending Routine "think_content" ---
-        for thisComponent in think_contentComponents:
+        for thisComponent in think_content.components:
             if hasattr(thisComponent, "setAutoDraw"):
                 thisComponent.setAutoDraw(False)
-        thisExp.addData('think_content.stopped', globalClock.getTime(format='float'))
+        # store stop times for think_content
+        think_content.tStop = globalClock.getTime(format='float')
+        think_content.tStopRefresh = tThisFlipGlobal
+        thisExp.addData('think_content.stopped', think_content.tStop)
         think_content_loop.addData('slider_thinking_content.response', slider_thinking_content.getRating())
         think_content_loop.addData('slider_thinking_content.rt', slider_thinking_content.getRT())
         # Run 'End Routine' code from code_thinking_content
@@ -1674,12 +1925,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         routineTimer.reset()
         
         # --- Prepare to start Routine "refresh" ---
+        # create an object to store info about Routine refresh
+        refresh = data.Routine(
+            name='refresh',
+            components=[text_refresh],
+        )
+        refresh.status = NOT_STARTED
         continueRoutine = True
         # update component parameters for each repeat
-        thisExp.addData('refresh.started', globalClock.getTime(format='float'))
+        # store start times for refresh
+        refresh.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+        refresh.tStart = globalClock.getTime(format='float')
+        refresh.status = STARTED
+        thisExp.addData('refresh.started', refresh.tStart)
+        refresh.maxDuration = None
         # keep track of which components have finished
-        refreshComponents = [text_refresh]
-        for thisComponent in refreshComponents:
+        refreshComponents = refresh.components
+        for thisComponent in refresh.components:
             thisComponent.tStart = None
             thisComponent.tStop = None
             thisComponent.tStartRefresh = None
@@ -1692,7 +1954,10 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         frameN = -1
         
         # --- Run Routine "refresh" ---
-        routineForceEnded = not continueRoutine
+        # if trial has changed, end Routine now
+        if isinstance(think_content_loop, data.TrialHandler2) and thisThink_content_loop.thisN != think_content_loop.thisTrial.thisN:
+            continueRoutine = False
+        refresh.forceEnded = routineForceEnded = not continueRoutine
         while continueRoutine and routineTimer.getTime() < 0.3:
             # get current time
             t = routineTimer.getTime()
@@ -1741,13 +2006,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             if thisExp.status == FINISHED or endExpNow:
                 endExperiment(thisExp, win=win)
                 return
+            # pause experiment here if requested
+            if thisExp.status == PAUSED:
+                pauseExperiment(
+                    thisExp=thisExp, 
+                    win=win, 
+                    timers=[routineTimer], 
+                    playbackComponents=[]
+                )
+                # skip the frame we paused on
+                continue
             
             # check if all components have finished
             if not continueRoutine:  # a component has requested a forced-end of Routine
-                routineForceEnded = True
+                refresh.forceEnded = routineForceEnded = True
                 break
             continueRoutine = False  # will revert to True if at least one component still running
-            for thisComponent in refreshComponents:
+            for thisComponent in refresh.components:
                 if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                     continueRoutine = True
                     break  # at least one component has not yet finished
@@ -1757,33 +2032,50 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
                 win.flip()
         
         # --- Ending Routine "refresh" ---
-        for thisComponent in refreshComponents:
+        for thisComponent in refresh.components:
             if hasattr(thisComponent, "setAutoDraw"):
                 thisComponent.setAutoDraw(False)
-        thisExp.addData('refresh.stopped', globalClock.getTime(format='float'))
+        # store stop times for refresh
+        refresh.tStop = globalClock.getTime(format='float')
+        refresh.tStopRefresh = tThisFlipGlobal
+        thisExp.addData('refresh.stopped', refresh.tStop)
         # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-        if routineForceEnded:
+        if refresh.maxDurationReached:
+            routineTimer.addTime(-refresh.maxDuration)
+        elif refresh.forceEnded:
             routineTimer.reset()
         else:
             routineTimer.addTime(-0.300000)
         thisExp.nextEntry()
         
-        if thisSession is not None:
-            # if running in a Session with a Liaison client, send data up to now
-            thisSession.sendExperimentData()
     # completed 1.0 repeats of 'think_content_loop'
     
+    if thisSession is not None:
+        # if running in a Session with a Liaison client, send data up to now
+        thisSession.sendExperimentData()
     
     # --- Prepare to start Routine "goodbye" ---
+    # create an object to store info about Routine goodbye
+    goodbye = data.Routine(
+        name='goodbye',
+        components=[goodbye_text, key_resp_goodbye],
+    )
+    goodbye.status = NOT_STARTED
     continueRoutine = True
     # update component parameters for each repeat
-    thisExp.addData('goodbye.started', globalClock.getTime(format='float'))
+    # create starting attributes for key_resp_goodbye
     key_resp_goodbye.keys = []
     key_resp_goodbye.rt = []
     _key_resp_goodbye_allKeys = []
+    # store start times for goodbye
+    goodbye.tStartRefresh = win.getFutureFlipTime(clock=globalClock)
+    goodbye.tStart = globalClock.getTime(format='float')
+    goodbye.status = STARTED
+    thisExp.addData('goodbye.started', goodbye.tStart)
+    goodbye.maxDuration = None
     # keep track of which components have finished
-    goodbyeComponents = [goodbye_text, key_resp_goodbye]
-    for thisComponent in goodbyeComponents:
+    goodbyeComponents = goodbye.components
+    for thisComponent in goodbye.components:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -1796,7 +2088,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
     frameN = -1
     
     # --- Run Routine "goodbye" ---
-    routineForceEnded = not continueRoutine
+    goodbye.forceEnded = routineForceEnded = not continueRoutine
     while continueRoutine:
         # get current time
         t = routineTimer.getTime()
@@ -1858,7 +2150,7 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.callOnFlip(key_resp_goodbye.clock.reset)  # t=0 on next screen flip
             win.callOnFlip(key_resp_goodbye.clearEvents, eventType='keyboard')  # clear events on next screen flip
         if key_resp_goodbye.status == STARTED and not waitOnFlip:
-            theseKeys = key_resp_goodbye.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=False)
+            theseKeys = key_resp_goodbye.getKeys(keyList=['a','b'], ignoreKeys=["escape"], waitRelease=True)
             _key_resp_goodbye_allKeys.extend(theseKeys)
             if len(_key_resp_goodbye_allKeys):
                 key_resp_goodbye.keys = _key_resp_goodbye_allKeys[-1].name  # just the last key pressed
@@ -1873,13 +2165,23 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
         if thisExp.status == FINISHED or endExpNow:
             endExperiment(thisExp, win=win)
             return
+        # pause experiment here if requested
+        if thisExp.status == PAUSED:
+            pauseExperiment(
+                thisExp=thisExp, 
+                win=win, 
+                timers=[routineTimer], 
+                playbackComponents=[]
+            )
+            # skip the frame we paused on
+            continue
         
         # check if all components have finished
         if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
+            goodbye.forceEnded = routineForceEnded = True
             break
         continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in goodbyeComponents:
+        for thisComponent in goodbye.components:
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
@@ -1889,10 +2191,13 @@ def run(expInfo, thisExp, win, globalClock=None, thisSession=None):
             win.flip()
     
     # --- Ending Routine "goodbye" ---
-    for thisComponent in goodbyeComponents:
+    for thisComponent in goodbye.components:
         if hasattr(thisComponent, "setAutoDraw"):
             thisComponent.setAutoDraw(False)
-    thisExp.addData('goodbye.stopped', globalClock.getTime(format='float'))
+    # store stop times for goodbye
+    goodbye.tStop = globalClock.getTime(format='float')
+    goodbye.tStopRefresh = tThisFlipGlobal
+    thisExp.addData('goodbye.stopped', goodbye.tStop)
     # check responses
     if key_resp_goodbye.keys in ['', [], None]:  # No response was made
         key_resp_goodbye.keys = None
@@ -1944,11 +2249,10 @@ def endExperiment(thisExp, win=None):
         # Flip one final time so any remaining win.callOnFlip() 
         # and win.timeOnFlip() tasks get executed
         win.flip()
+    # return console logger level to WARNING
+    logging.console.setLevel(logging.WARNING)
     # mark experiment handler as finished
     thisExp.status = FINISHED
-    # shut down eyetracker, if there is one
-    if deviceManager.getDevice('eyetracker') is not None:
-        deviceManager.removeDevice('eyetracker')
     logging.flush()
 
 
@@ -1970,9 +2274,6 @@ def quit(thisExp, win=None, thisSession=None):
         # and win.timeOnFlip() tasks get executed before quitting
         win.flip()
         win.close()
-    # shut down eyetracker, if there is one
-    if deviceManager.getDevice('eyetracker') is not None:
-        deviceManager.removeDevice('eyetracker')
     logging.flush()
     if thisSession is not None:
         thisSession.stop()

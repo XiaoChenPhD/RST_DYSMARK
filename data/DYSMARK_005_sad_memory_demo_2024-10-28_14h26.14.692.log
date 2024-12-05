@@ -1,0 +1,13 @@
+4.7894 	ERROR 	Plugin `psychopy-cedrus` entry point requires module `psychopy_cedrus`, but it cannot be imported.
+20.6304 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+20.7920 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+20.7924 	WARNING 	This monitor has not been color-calibrated. Using default DKL conversion matrix.
+22.0054 	WARNING 	Couldn't measure a consistent frame rate!
+  - Is your graphics card set to sync to vertical blank?
+  - Are you running other processes on your computer?
+
+1.6568 	WARNING 	t of last frame was 44.70ms (=1/22)
+6.4963 	WARNING 	t of last frame was 29.74ms (=1/33)
+9.5144 	WARNING 	t of last frame was 31.92ms (=1/31)
+15.5086 	WARNING 	t of last frame was 25.09ms (=1/39)
+17.7984 	WARNING 	Multiple dropped frames have occurred - I'll stop bothering you about them!
